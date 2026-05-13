@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AcademicOS | Procesos</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-dark text-white antialiased">
+    <div class="bg-mesh"></div>
+    <div class="bg-grid"></div>
+
+    <div class="page-shell">
+        <!-- Sidebar -->
+        <aside>
+            <div class="flex items-center gap-3 px-2 mb-10 text-primary">
+                <div class="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center">
+                    <i data-lucide="graduation-cap"></i>
+                </div>
+                <span class="text-2xl font-bold tracking-tight font-heading">AcademicOS</span>
+            </div>
+
+            <nav class="flex-1">
+                <p class="section-label">General</p>
+                <a href="../../index.html" class="nav-link">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>Dashboard</span>
+                </a>
+                
+                <p class="section-label">Módulos</p>
+                <a href="../datos/datos.html" class="nav-link">
+                    <i data-lucide="database"></i>
+                    <span>Gestión de Datos</span>
+                </a>
+                <a href="procesos.html" class="nav-link active">
+                    <i data-lucide="cpu"></i>
+                    <span>Procesos Académicos</span>
+                </a>
+                <a href="../resportes/reportes.html" class="nav-link">
+                    <i data-lucide="bar-chart-3"></i>
+                    <span>Reportes y Análisis</span>
+                </a>
+                <a href="../herramientas/herramientas.html" class="nav-link">
+                    <i data-lucide="wrench"></i>
+                    <span>Herramientas</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main>
+            <header class="flex items-center justify-between mb-12">
+                <div>
+                    <a href="../../index.html" class="text-primary hover:text-primary-light text-sm flex items-center gap-2 mb-4">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i> Volver al Dashboard
+                    </a>
+                    <h1 class="text-4xl font-bold text-gradient mb-2">Procesos Académicos</h1>
+                    <p class="text-zinc-400">Asignación de pensums y monitoreo de pistas de auditoría.</p>
+                </div>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+                <!-- Asignación Section -->
+                <div class="glass-card p-8">
+                    <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+                        <i data-lucide="book-plus" class="text-primary"></i>
+                        Asignación de Pensum
+                    </h2>
+                    <form class="space-y-6">
+                        <div class="space-y-4">
+                            <div class="space-y-1.5">
+                                <label class="text-xs font-semibold text-zinc-500 uppercase tracking-widest">Programa Académico</label>
+                                <select id="prog-select" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 focus:border-primary/50 outline-none text-zinc-400">
+                                    <option>Seleccione un programa...</option>
+                                    <option>Ingeniería de Sistemas</option>
+                                    <option>Derecho</option>
+                                    <option>Administración de Empresas</option>
+                                </select>
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="text-xs font-semibold text-zinc-500 uppercase tracking-widest">Asignatura</label>
+                                <select id="asig-select" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 focus:border-primary/50 outline-none text-zinc-400">
+                                    <option>Seleccione una asignatura...</option>
+                                    <option>Base de Datos II</option>
+                                    <option>Programación Orientada a Objetos</option>
+                                    <option>Cálculo Integral</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="button" onclick="ui.handleAssignment()" class="btn-primary w-full py-4 shadow-lg shadow-primary/20">
+                            <span>Vincular al Pensum</span>
+                            <i data-lucide="link" class="w-4 h-4"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Auditoría Section -->
+                <div class="glass-card p-8">
+                    <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+                        <i data-lucide="shield-check" class="text-accent"></i>
+                        Pistas de Auditoría
+                    </h2>
+                    <div class="space-y-4">
+                        <div class="overflow-hidden border border-white/5 rounded-2xl">
+                            <div class="p-4 bg-white/5 border-b border-white/5 flex justify-between items-center">
+                                <span class="text-xs font-bold text-zinc-400 uppercase tracking-widest">Últimos Eventos</span>
+                                <span class="text-xs text-primary">Live</span>
+                            </div>
+                            <div class="p-4 space-y-4 max-h-[300px] overflow-y-auto custom-scrollbar">
+                                <div class="flex items-start gap-4 p-3 rounded-xl bg-white/5 border border-white/5">
+                                    <div class="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 shrink-0">
+                                        <i data-lucide="plus" class="w-4 h-4"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold">Nuevo Tercero Registrado</p>
+                                        <p class="text-[10px] text-zinc-500">Admin - Hace 2 min</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-4 p-3 rounded-xl bg-white/5 border border-white/5">
+                                    <div class="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 shrink-0">
+                                        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold">Actualización de Pensum</p>
+                                        <p class="text-[10px] text-zinc-500">Sistema - Hace 15 min</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-4 p-3 rounded-xl bg-white/5 border border-white/5">
+                                    <div class="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center text-red-500 shrink-0">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold">Tercero Eliminado</p>
+                                        <p class="text-[10px] text-zinc-500">Admin - Hace 1 hora</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Section -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="glass-card p-6 flex items-center gap-4">
+                    <div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary"><i data-lucide="check-square"></i></div>
+                    <div><p class="text-xs text-zinc-500 uppercase font-bold">Completitud Pensum</p><p class="text-xl font-bold">92%</p></div>
+                </div>
+                <div class="glass-card p-6 flex items-center gap-4">
+                    <div class="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center text-accent"><i data-lucide="activity"></i></div>
+                    <div><p class="text-xs text-zinc-500 uppercase font-bold">Acciones Hoy</p><p class="text-xl font-bold">142</p></div>
+                </div>
+                <div class="glass-card p-6 flex items-center gap-4 text-emerald-400">
+                    <div class="w-10 h-10 bg-emerald-400/10 rounded-lg flex items-center justify-center text-emerald-400"><i data-lucide="shield"></i></div>
+                    <div><p class="text-xs text-zinc-500 uppercase font-bold">Estado Seguridad</p><p class="text-xl font-bold">Óptimo</p></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../../api.js"></script>
+    <script src="../../app.js"></script>
+</body>
+</html>

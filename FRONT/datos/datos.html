@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AcademicOS | Gestión de Datos</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-dark text-white antialiased">
+    <div class="bg-mesh"></div>
+    <div class="bg-grid"></div>
+
+    <div class="page-shell">
+        <!-- Sidebar -->
+        <aside>
+            <div class="flex items-center gap-3 px-2 mb-10 text-primary">
+                <div class="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center">
+                    <i data-lucide="graduation-cap"></i>
+                </div>
+                <span class="text-2xl font-bold tracking-tight font-heading">AcademicOS</span>
+            </div>
+
+            <nav class="flex-1">
+                <p class="section-label">General</p>
+                <a href="../../index.html" class="nav-link">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>Dashboard</span>
+                </a>
+                
+                <p class="section-label">Módulos</p>
+                <a href="datos.html" class="nav-link active">
+                    <i data-lucide="database"></i>
+                    <span>Gestión de Datos</span>
+                </a>
+                <a href="../procesos/procesos.html" class="nav-link">
+                    <i data-lucide="cpu"></i>
+                    <span>Procesos Académicos</span>
+                </a>
+                <a href="../resportes/reportes.html" class="nav-link">
+                    <i data-lucide="bar-chart-3"></i>
+                    <span>Reportes y Análisis</span>
+                </a>
+                <a href="../herramientas/herramientas.html" class="nav-link">
+                    <i data-lucide="wrench"></i>
+                    <span>Herramientas</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main>
+            <header class="flex items-center justify-between mb-12">
+                <div>
+                    <a href="../../index.html" class="text-primary hover:text-primary-light text-sm flex items-center gap-2 mb-4">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i> Volver al Dashboard
+                    </a>
+                    <h1 class="text-4xl font-bold text-gradient mb-2">Gestión de Datos</h1>
+                    <p class="text-zinc-400">Administra la información de terceros, programas y asignaturas de la institución.</p>
+                </div>
+                <button onclick="ui.toggleModal('modal-tercero', true)" class="btn-primary">
+                    <i data-lucide="plus" class="w-5 h-5"></i> Nuevo Tercero
+                </button>
+            </header>
+
+            <!-- Status Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+                <div class="glass-card p-6">
+                    <p class="text-zinc-500 text-xs uppercase tracking-widest mb-2">Terceros</p>
+                    <p id="stat-terceros" class="text-3xl font-bold">--</p>
+                </div>
+                <div class="glass-card p-6">
+                    <p class="text-zinc-500 text-xs uppercase tracking-widest mb-2">Programas</p>
+                    <p id="stat-programas" class="text-3xl font-bold">--</p>
+                </div>
+                <div class="glass-card p-6">
+                    <p class="text-zinc-500 text-xs uppercase tracking-widest mb-2">Asignaturas</p>
+                    <p id="stat-asignaturas" class="text-3xl font-bold">--</p>
+                </div>
+                <div class="glass-card p-6">
+                    <p class="text-zinc-500 text-xs uppercase tracking-widest mb-2">Pensums</p>
+                    <p id="stat-pensums" class="text-3xl font-bold">--</p>
+                </div>
+            </div>
+
+            <!-- Table Section -->
+            <div class="glass-card overflow-hidden">
+                <div class="flex items-center justify-between mb-8">
+                    <h2 class="text-2xl font-bold">Registros de Terceros</h2>
+                    <div class="flex gap-2">
+                        <div class="relative">
+                            <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500"></i>
+                            <input type="text" placeholder="Filtrar..." class="bg-white/5 border border-white/10 rounded-lg py-2 pl-10 pr-4 text-sm focus:border-primary/50 outline-none">
+                        </div>
+                        <button onclick="ui.loadTerceros()" class="p-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors">
+                            <i data-lucide="refresh-cw" class="w-4 h-4 text-zinc-400"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="border-b border-white/5">
+                                <th class="pb-4 px-4 font-semibold text-zinc-500 text-sm">NOMBRE COMPLETO</th>
+                                <th class="pb-4 px-4 font-semibold text-zinc-500 text-sm">IDENTIFICACIÓN</th>
+                                <th class="pb-4 px-4 font-semibold text-zinc-500 text-sm">CORREO</th>
+                                <th class="pb-4 px-4 font-semibold text-zinc-500 text-sm">ROL</th>
+                                <th class="pb-4 px-4 font-semibold text-right text-zinc-500 text-sm">ACCIONES</th>
+                            </tr>
+                        </thead>
+                        <tbody id="terceros-body" class="divide-y divide-white/5">
+                            <!-- Datos dinámicos -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Formulario -->
+    <div id="modal-tercero" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="glass-card max-w-lg w-full p-8 shadow-2xl animate-in zoom-in duration-300">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h3 class="text-2xl font-bold">Gestión de Tercero</h3>
+                    <p class="text-zinc-500 text-sm">Ingresa la información requerida por el sistema.</p>
+                </div>
+                <button onclick="ui.toggleModal('modal-tercero', false)" class="text-zinc-500 hover:text-white transition-colors">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <form id="form-terceros" class="space-y-5">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-semibold text-zinc-500 uppercase tracking-widest">Documento ID</label>
+                        <input type="text" name="id" required class="w-full bg-zinc-900/50 border border-white/10 rounded-xl p-3.5 focus:border-primary/50 outline-none transition-all">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-semibold text-zinc-500 uppercase tracking-widest">Rol Institucional</label>
+                        <select name="tipo" class="w-full bg-zinc-900/50 border border-white/10 rounded-xl p-3.5 focus:border-primary/50 outline-none text-zinc-400">
+                            <option value="Estudiante">Estudiante</option>
+                            <option value="Docente">Docente</option>
+                            <option value="Administrativo">Administrativo</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-xs font-semibold text-zinc-500 uppercase tracking-widest">Carrera / Programa Académico</label>
+                    <select id="select-programa" name="programa" class="w-full bg-zinc-900/50 border border-white/10 rounded-xl p-3.5 focus:border-primary/50 outline-none text-zinc-400">
+                        <option value="">Seleccione una carrera...</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-semibold text-zinc-500 uppercase tracking-widest">Nombres</label>
+                        <input type="text" name="nombres" required class="w-full bg-zinc-900/50 border border-white/10 rounded-xl p-3.5 focus:border-primary/50 outline-none transition-all">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-semibold text-zinc-500 uppercase tracking-widest">Apellidos</label>
+                        <input type="text" name="apellidos" required class="w-full bg-zinc-900/50 border border-white/10 rounded-xl p-3.5 focus:border-primary/50 outline-none transition-all">
+                    </div>
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-xs font-semibold text-zinc-500 uppercase tracking-widest">Correo Electrónico</label>
+                    <input type="email" name="correo" required class="w-full bg-zinc-900/50 border border-white/10 rounded-xl p-3.5 focus:border-primary/50 outline-none transition-all">
+                </div>
+                <button type="submit" class="btn-primary w-full py-4 mt-8">
+                    <span>Guardar en Oracle DB</span>
+                    <i data-lucide="database" class="w-4 h-4"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="../../api.js"></script>
+    <script src="../../app.js"></script>
+</body>
+</html>

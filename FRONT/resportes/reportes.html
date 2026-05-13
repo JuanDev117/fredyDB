@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AcademicOS | Reportes</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Librería para PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body class="bg-dark text-white antialiased">
+    <div class="bg-mesh"></div>
+    <div class="bg-grid"></div>
+
+    <div class="page-shell">
+        <aside>
+            <div class="flex items-center gap-3 px-2 mb-10 text-primary">
+                <div class="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center">
+                    <i data-lucide="graduation-cap"></i>
+                </div>
+                <span class="text-2xl font-bold tracking-tight font-heading">AcademicOS</span>
+            </div>
+
+            <nav class="flex-1">
+                <p class="section-label">General</p>
+                <a href="../../index.html" class="nav-link">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>Dashboard</span>
+                </a>
+                
+                <p class="section-label">Módulos</p>
+                <a href="../datos/datos.html" class="nav-link">
+                    <i data-lucide="database"></i>
+                    <span>Gestión de Datos</span>
+                </a>
+                <a href="../procesos/procesos.html" class="nav-link">
+                    <i data-lucide="cpu"></i>
+                    <span>Procesos Académicos</span>
+                </a>
+                <a href="reportes.html" class="nav-link active">
+                    <i data-lucide="bar-chart-3"></i>
+                    <span>Reportes y Análisis</span>
+                </a>
+                <a href="../herramientas/herramientas.html" class="nav-link">
+                    <i data-lucide="wrench"></i>
+                    <span>Herramientas</span>
+                </a>
+            </nav>
+        </aside>
+
+        <main>
+            <header class="flex items-center justify-between mb-12">
+                <div>
+                    <h1 class="text-4xl font-bold text-gradient mb-2">Centro de Reportes</h1>
+                    <p class="text-zinc-400">Generación de certificados académicos y analítica de datos.</p>
+                </div>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Filtros -->
+                <div class="lg:col-span-1 space-y-6">
+                    <div class="glass-card p-6">
+                        <h3 class="text-lg font-bold mb-4">Generar Certificado</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-xs font-bold text-zinc-500 uppercase">ID del Estudiante</label>
+                                <input type="text" id="student-id" placeholder="Ej: 12234234" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 mt-2 outline-none focus:border-primary/50 transition-all">
+                            </div>
+                            <button onclick="ui.generateReport()" class="btn-primary w-full py-3">
+                                <span>Consultar Datos</span>
+                                <i data-lucide="search" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="glass-card p-6 border-l-4 border-accent">
+                        <h4 class="text-sm font-bold text-accent uppercase mb-2">Estado del Sistema</h4>
+                        <p class="text-xs text-zinc-400">Base de datos Oracle conectada. Tablas sincronizadas con el modelo de Historias Académicas.</p>
+                    </div>
+                </div>
+
+                <!-- Visualización -->
+                <div class="lg:col-span-2">
+                    <div id="cert-display" class="hidden">
+                        <div class="glass-card p-10 relative overflow-hidden" id="certificate-preview">
+                            <!-- Decoración del certificado -->
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-bl-full"></div>
+                            <div class="absolute bottom-0 left-0 w-32 h-32 bg-accent/10 rounded-tr-full"></div>
+
+                            <div class="text-center space-y-6 relative z-10">
+                                <div class="w-20 h-20 bg-white/5 rounded-full mx-auto flex items-center justify-center border border-white/10">
+                                    <i data-lucide="award" class="w-10 h-10 text-primary"></i>
+                                </div>
+                                
+                                <div class="space-y-2">
+                                    <h2 class="text-3xl font-bold font-heading">CERTIFICADO ACADÉMICO</h2>
+                                    <p class="text-primary font-semibold tracking-widest uppercase text-sm">Institución Educativa AcademicOS</p>
+                                </div>
+
+                                <div class="py-8 border-y border-white/10">
+                                    <p class="text-zinc-400 italic">Se hace constar que el estudiante con identificación</p>
+                                    <p id="res-id" class="text-2xl font-bold my-2 text-white">---</p>
+                                    <p class="text-zinc-400 italic">Ha obtenido un promedio acumulado de:</p>
+                                    <p id="res-promedio" class="text-5xl font-black text-gradient my-4">0.0</p>
+                                </div>
+
+                                <div class="flex justify-between items-end pt-6">
+                                    <div class="text-left">
+                                        <p class="text-[10px] text-zinc-500 uppercase">Fecha de Expedición</p>
+                                        <p id="res-fecha" class="text-sm font-semibold">--/--/----</p>
+                                    </div>
+                                    <button onclick="ui.downloadPDF()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20">
+                                        <i data-lucide="download"></i>
+                                        Descargar PDF Oficial
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div id="cert-empty" class="glass-card p-20 text-center space-y-4">
+                        <div class="w-16 h-16 bg-white/5 rounded-full mx-auto flex items-center justify-center text-zinc-600">
+                            <i data-lucide="file-search" class="w-8 h-8"></i>
+                        </div>
+                        <p class="text-zinc-500">Ingresa un ID de estudiante para generar el certificado.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../../api.js"></script>
+    <script src="../../app.js"></script>
+</body>
+</html>

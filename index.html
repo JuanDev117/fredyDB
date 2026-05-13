@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AcademicOS | Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Extra custom styles for the dashboard portal */
+        .hero-gradient {
+            background: radial-gradient(100% 100% at 0% 0%, rgba(16, 185, 129, 0.15) 0%, transparent 100%);
+        }
+    </style>
+</head>
+<body class="bg-dark text-white antialiased">
+    <div class="bg-mesh"></div>
+    <div class="bg-grid"></div>
+
+    <div class="page-shell">
+        <!-- Sidebar -->
+        <aside>
+            <div class="flex items-center gap-3 px-2 mb-10 text-primary">
+                <div class="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center">
+                    <i data-lucide="graduation-cap"></i>
+                </div>
+                <span class="text-2xl font-bold tracking-tight font-heading">AcademicOS</span>
+            </div>
+
+            <nav class="flex-1">
+                <p class="section-label">General</p>
+                <a href="index.html" class="nav-link active">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>Dashboard</span>
+                </a>
+                
+                <p class="section-label">Módulos</p>
+                <a href="FRONT/datos/datos.html" class="nav-link">
+                    <i data-lucide="database"></i>
+                    <span>Gestión de Datos</span>
+                </a>
+                <a href="FRONT/procesos/procesos.html" class="nav-link">
+                    <i data-lucide="cpu"></i>
+                    <span>Procesos Académicos</span>
+                </a>
+                <a href="FRONT/resportes/reportes.html" class="nav-link">
+                    <i data-lucide="bar-chart-3"></i>
+                    <span>Reportes y Análisis</span>
+                </a>
+                <a href="FRONT/herramientas/herramientas.html" class="nav-link">
+                    <i data-lucide="wrench"></i>
+                    <span>Herramientas</span>
+                </a>
+
+                <p class="section-label">Sistema</p>
+                <a href="#" class="nav-link">
+                    <i data-lucide="settings"></i>
+                    <span>Configuración</span>
+                </a>
+            </nav>
+
+            <div class="mt-auto p-4 glass-card rounded-2xl flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-accent"></div>
+                <div>
+                    <p class="text-sm font-semibold">Admin Usuario</p>
+                    <p class="text-[10px] text-zinc-500 uppercase tracking-wider">Super Administrador</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main>
+            <!-- Top Bar -->
+            <header class="flex items-center justify-between mb-12">
+                <div>
+                    <h1 class="text-4xl font-bold text-gradient mb-2">Bienvenido de nuevo</h1>
+                    <p class="text-zinc-400">Panel de control de la plataforma educativa IDB Fredy.</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="relative hidden md:block">
+                        <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500"></i>
+                        <input type="text" placeholder="Buscar módulos..." class="bg-zinc-900/50 border border-white/5 rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-primary/50 transition-all w-64">
+                    </div>
+                    <button class="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center border border-white/5 hover:bg-zinc-800 transition-colors">
+                        <i data-lucide="bell" class="w-5 h-5 text-zinc-400"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Hero Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                <div class="glass-card flex items-center gap-6 p-6 border-l-4 border-primary">
+                    <div class="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
+                        <i data-lucide="users" class="w-8 h-8"></i>
+                    </div>
+                    <div>
+                        <p class="text-zinc-500 text-sm font-medium">Estudiantes Activos</p>
+                        <p class="text-3xl font-bold">1,284</p>
+                    </div>
+                </div>
+                <div class="glass-card flex items-center gap-6 p-6 border-l-4 border-accent">
+                    <div class="w-14 h-14 bg-accent/10 rounded-2xl flex items-center justify-center text-accent">
+                        <i data-lucide="book-open" class="w-8 h-8"></i>
+                    </div>
+                    <div>
+                        <p class="text-zinc-500 text-sm font-medium">Cursos en Vigor</p>
+                        <p class="text-3xl font-bold">42</p>
+                    </div>
+                </div>
+                <div class="glass-card flex items-center gap-6 p-6 border-l-4 border-emerald-400">
+                    <div class="w-14 h-14 bg-emerald-400/10 rounded-2xl flex items-center justify-center text-emerald-400">
+                        <i data-lucide="check-circle" class="w-8 h-8"></i>
+                    </div>
+                    <div>
+                        <p class="text-zinc-500 text-sm font-medium">Tareas Revisadas</p>
+                        <p class="text-3xl font-bold">95%</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Portal Grid -->
+            <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+                <i data-lucide="layout-grid" class="text-primary"></i>
+                Explorar Módulos
+            </h2>
+            <div class="portal-grid">
+                <!-- Datos -->
+                <a href="FRONT/datos/datos.html" class="portal-card">
+                    <div class="portal-icon">
+                        <i data-lucide="users" class="w-8 h-8"></i>
+                    </div>
+                    <h3>Gestión de Datos</h3>
+                    <p>Administra la base de datos de terceros, estudiantes, docentes y personal administrativo de la institución.</p>
+                    <div class="mt-6 flex items-center gap-2 text-primary text-sm font-semibold">
+                        Ir al módulo <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </div>
+                </a>
+
+                <!-- Procesos -->
+                <a href="FRONT/procesos/procesos.html" class="portal-card">
+                    <div class="portal-icon" style="color: var(--accent); background: rgba(99, 102, 241, 0.05);">
+                        <i data-lucide="layers" class="w-8 h-8"></i>
+                    </div>
+                    <h3>Procesos Académicos</h3>
+                    <p>Configuración de pensum, asignación de materias, auditorías de sistema y flujos de trabajo institucionales.</p>
+                    <div class="mt-6 flex items-center gap-2 text-accent text-sm font-semibold">
+                        Ir al módulo <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </div>
+                </a>
+
+                <!-- Reportes -->
+                <a href="FRONT/resportes/reportes.html" class="portal-card">
+                    <div class="portal-icon" style="color: #fbbf24; background: rgba(251, 191, 36, 0.05);">
+                        <i data-lucide="file-text" class="w-8 h-8"></i>
+                    </div>
+                    <h3>Centro de Reportes</h3>
+                    <p>Genera certificados, boletines de notas y análisis estadísticos del rendimiento académico global.</p>
+                    <div class="mt-6 flex items-center gap-2 text-[#fbbf24] text-sm font-semibold">
+                        Ir al módulo <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </div>
+                </a>
+
+                <!-- Herramientas -->
+                <a href="FRONT/herramientas/herramientas.html" class="portal-card">
+                    <div class="portal-icon" style="color: #ec4899; background: rgba(236, 72, 153, 0.05);">
+                        <i data-lucide="terminal" class="w-8 h-8"></i>
+                    </div>
+                    <h3>Herramientas</h3>
+                    <p>Carga masiva de datos mediante CSV/Excel, validación de integridad y utilidades técnicas avanzadas.</p>
+                    <div class="mt-6 flex items-center gap-2 text-[#ec4899] text-sm font-semibold">
+                        Ir al módulo <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Footer / System Status -->
+            <footer class="mt-20 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center text-zinc-500 text-sm gap-4">
+                <p>&copy; 2026 AcademicOS - Plataforma de Gestión Educativa. Todos los derechos reservados.</p>
+                <div class="flex items-center gap-6">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                        Sistema Operativo
+                    </div>
+                    <p>v2.4.0-stable</p>
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+    </script>
+</body>
+</html>
