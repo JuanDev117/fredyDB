@@ -1,11 +1,17 @@
 const ui = {
     currentTerceroId: null,
+    estudiantes: [],
+    programas: [],
+    selectedStudent: null,
+    selectedProgram: null,
+    selectedPensumId: null,
 
     init() {
         lucide.createIcons();
         this.loadTerceros();
         this.loadStats();
         this.loadProgramas();
+        this.initAsignarPensum();
         this.bindEvents();
     },
 
@@ -29,7 +35,7 @@ const ui = {
         try {
             const programas = await API.get('/programas');
             select.innerHTML = '<option value="">Seleccione una carrera...</option>' + 
-                programas.map(p => `<option value="${p.ID}">${p.NOMBRE}</option>`).join('');
+                programas.map(p => `<option value="${p.PROG_ID || p.ID}">${p.PROG_PROGRAMA || p.NOMBRE}</option>`).join('');
         } catch (err) {
             console.error('Error al cargar programas');
         }
@@ -42,6 +48,217 @@ const ui = {
         // Listener para carga masiva
         const importBtn = document.getElementById('btn-importar');
         if (importBtn) importBtn.onclick = () => this.handleImport();
+    },
+
+    async initAsignarPensum() {
+        if (!document.getElementById('form-asignar-pensum')) return;
+
+        this.bindAsignarPensumEvents();
+
+        try {
+            await Promise.all([
+                this.loadEstudiantesPensum(),
+                this.loadProgramasPensum()
+            ]);
+            this.showAsignarStatus('', 'info', true);
+        } catch (err) {
+            this.showAsignarStatus('No fue posible conectar con la API. Verifique que el backend este activo.', 'error');
+        }
+    },
+
+    bindAsignarPensumEvents() {
+        const searchInput = document.getElementById('student-search');
+        const studentSelect = document.getElementById('student-select');
+        const programSelect = document.getElementById('program-select');
+        const pensumSelect = document.getElementById('pensum-select');
+        const assignBtn = document.getElementById('btn-asignar-pensum');
+        const examineBtn = document.getElementById('btn-examinar-pensum');
+
+        if (searchInput) {
+            searchInput.addEventListener('input', () => this.renderStudentOptions(searchInput.value));
+        }
+
+        if (studentSelect) {
+            studentSelect.addEventListener('change', () => {
+                this.selectedStudent = this.estudiantes.find(e => String(e.TERC_ID) === studentSelect.value) || null;
+            });
+        }
+
+        if (programSelect) {
+            programSelect.addEventListener('change', async () => {
+                this.selectedProgram = this.programas.find(p => String(p.PROG_ID) === programSelect.value) || null;
+                this.selectedPensumId = null;
+                await this.loadPensumsByProgram(programSelect.value);
+            });
+        }
+
+        if (pensumSelect) {
+            pensumSelect.addEventListener('change', () => {
+                this.selectedPensumId = pensumSelect.value || null;
+            });
+        }
+
+        if (assignBtn) assignBtn.addEventListener('click', () => this.assignPensumToStudent());
+        if (examineBtn) examineBtn.addEventListener('click', () => this.examineStudentPensum());
+    },
+
+    async loadEstudiantesPensum() {
+        this.estudiantes = await API.get('/estudiantes');
+        this.renderStudentOptions('');
+    },
+
+    renderStudentOptions(query) {
+        const select = document.getElementById('student-select');
+        if (!select) return;
+
+        const normalizedQuery = String(query || '').trim().toLowerCase();
+        const filtered = this.estudiantes.filter((student) => {
+            const fullText = `${student.TERC_ID} ${student.TERC_NOMBRES} ${student.TERC_APELLIDOS}`.toLowerCase();
+            return fullText.includes(normalizedQuery);
+        });
+
+        select.innerHTML = '<option value="">Seleccione un estudiante...</option>' +
+            filtered.map(student => `
+                <option value="${student.TERC_ID}">
+                    ${student.TERC_ID} - ${student.TERC_NOMBRES} ${student.TERC_APELLIDOS}
+                </option>
+            `).join('');
+
+        if (!filtered.length) {
+            select.innerHTML = '<option value="">Sin estudiantes para la busqueda...</option>';
+        }
+    },
+
+    async loadProgramasPensum() {
+        const select = document.getElementById('program-select');
+        if (!select) return;
+
+        this.programas = await API.get('/programas');
+        select.innerHTML = '<option value="">Seleccione un programa...</option>' +
+            this.programas.map(programa => `
+                <option value="${programa.PROG_ID}">${programa.PROG_PROGRAMA}</option>
+            `).join('');
+    },
+
+    async loadPensumsByProgram(programId) {
+        const select = document.getElementById('pensum-select');
+        if (!select) return;
+
+        if (!programId) {
+            select.disabled = true;
+            select.innerHTML = '<option value="">Seleccione primero un programa...</option>';
+            return;
+        }
+
+        try {
+            select.disabled = true;
+            select.innerHTML = '<option value="">Cargando pensums...</option>';
+            const pensums = await API.get(`/pensums/${programId}`);
+
+            select.innerHTML = '<option value="">Seleccione un pensum...</option>' +
+                pensums.map(pensum => {
+                    const label = pensum.PENS_PERIODO || pensum.PENS_NOMBRE || pensum.PENS_DESCRIPCION || `Pensum ${pensum.PENS_ID}`;
+                    return `<option value="${pensum.PENS_ID}">${label}</option>`;
+                }).join('');
+            select.disabled = !pensums.length;
+
+            if (!pensums.length) {
+                select.innerHTML = '<option value="">Este programa no tiene pensums...</option>';
+            }
+        } catch (err) {
+            select.disabled = true;
+            select.innerHTML = '<option value="">Error cargando pensums...</option>';
+            this.showAsignarStatus('No se pudieron cargar los pensums del programa seleccionado.', 'error');
+        }
+    },
+
+    async assignPensumToStudent() {
+        const tercId = document.getElementById('student-select')?.value;
+        const pensId = document.getElementById('pensum-select')?.value;
+
+        if (!tercId || !pensId) {
+            this.showAsignarStatus('Seleccione estudiante, programa y pensum antes de asignar.', 'error');
+            return;
+        }
+
+        try {
+            await API.post('/asignar-pensum', {
+                terc_id: Number(tercId),
+                pens_id: Number(pensId)
+            });
+            alert('Pensum asignado correctamente.');
+            this.showAsignarStatus('Pensum asignado correctamente.', 'success');
+        } catch (err) {
+            this.showAsignarStatus('Error al asignar pensum: ' + (err.error || err.message || 'Operacion no completada'), 'error');
+        }
+    },
+
+    async examineStudentPensum() {
+        const tercId = document.getElementById('student-select')?.value;
+        if (!tercId) {
+            this.showAsignarStatus('Seleccione un estudiante para examinar.', 'error');
+            return;
+        }
+
+        this.selectedStudent = this.estudiantes.find(e => String(e.TERC_ID) === tercId) || null;
+        this.renderStudentSummary();
+
+        try {
+            const historial = await API.get(`/historial/${tercId}`);
+            this.renderHistorial(historial);
+            this.showAsignarStatus('', 'info', true);
+        } catch (err) {
+            this.renderHistorial([]);
+            this.showAsignarStatus('No se pudo consultar el historial del estudiante.', 'error');
+        }
+    },
+
+    renderStudentSummary() {
+        const summary = document.getElementById('student-summary');
+        if (!summary || !this.selectedStudent) return;
+
+        document.getElementById('summary-nombres').innerText = this.selectedStudent.TERC_NOMBRES || '--';
+        document.getElementById('summary-apellidos').innerText = this.selectedStudent.TERC_APELLIDOS || '--';
+        document.getElementById('summary-programa').innerText = this.selectedProgram?.PROG_PROGRAMA || '--';
+        summary.classList.remove('hidden');
+    },
+
+    renderHistorial(historial) {
+        const tbody = document.getElementById('historial-body');
+        if (!tbody) return;
+
+        if (!historial.length) {
+            tbody.innerHTML = '<tr><td colspan="3" class="text-center text-zinc-500">No hay materias matriculadas para este estudiante.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = historial.map(item => `
+            <tr class="hover:bg-white/[0.02] transition-colors">
+                <td class="font-mono text-zinc-300">${item.CURS_ID}</td>
+                <td class="font-semibold text-white">${item.ASIG_ASIGNATURA}</td>
+                <td class="text-zinc-300">${item.HIST_NOTA ?? 'Pendiente'}</td>
+            </tr>
+        `).join('');
+    },
+
+    showAsignarStatus(message, type = 'info', hide = false) {
+        const status = document.getElementById('asignar-status');
+        if (!status) return;
+
+        if (hide || !message) {
+            status.classList.add('hidden');
+            status.innerText = '';
+            return;
+        }
+
+        const styles = {
+            success: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200',
+            error: 'border-red-500/30 bg-red-500/10 text-red-200',
+            info: 'border-white/10 bg-white/5 text-zinc-300'
+        };
+
+        status.className = `rounded-lg border px-4 py-3 text-sm ${styles[type] || styles.info}`;
+        status.innerText = message;
     },
 
     async loadTerceros() {
@@ -57,29 +274,77 @@ const ui = {
         const tbody = document.getElementById('terceros-body');
         if (!tbody) return;
         
-        tbody.innerHTML = terceros.map(t => `
-            <tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
-                <td class="py-4 px-4">${t.NOMBRES} ${t.APELLIDOS}</td>
-                <td class="py-4 px-4">${t.ID}</td>
-                <td class="py-4 px-4 text-zinc-400">${t.CORREO}</td>
-                <td class="py-4 px-4"><span class="px-2 py-1 bg-white/5 rounded text-xs">${t.TIPO}</span></td>
-                <td class="py-4 px-4 text-right">
-                    <button onclick="ui.editTercero('${t.ID}')" class="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors">
-                        <i data-lucide="edit-2" class="w-4 h-4"></i>
-                    </button>
-                    <button onclick="ui.deleteTercero('${t.ID}')" class="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                    </button>
-                </td>
-            </tr>
-        `).join('');
+        tbody.innerHTML = terceros.map(t => {
+            let badgeClass = 'badge badge-admin';
+            if (t.TIPO === 'Estudiante') badgeClass = 'badge badge-student';
+            else if (t.TIPO === 'Docente') badgeClass = 'badge badge-teacher';
+            
+            return `
+                <tr class="hover:bg-white/[0.02] transition-colors">
+                    <td class="py-4 px-4 font-semibold text-white">${t.NOMBRES} ${t.APELLIDOS}</td>
+                    <td class="py-4 px-4 font-mono text-zinc-300 text-sm">${t.ID}</td>
+                    <td class="py-4 px-4 text-zinc-400 text-sm">${t.CORREO}</td>
+                    <td class="py-4 px-4"><span class="${badgeClass}">${t.TIPO}</span></td>
+                    <td class="py-4 px-4 text-right">
+                        <div class="inline-flex gap-1">
+                            <button onclick="ui.editTercero('${t.ID}')" class="p-2 text-primary hover:bg-primary/10 rounded-xl border border-transparent hover:border-primary/20 transition-all active:scale-90" title="Editar">
+                                <i data-lucide="edit-2" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="ui.deleteTercero('${t.ID}')" class="p-2 text-red-400 hover:bg-red-500/10 rounded-xl border border-transparent hover:border-red-500/20 transition-all active:scale-90" title="Eliminar">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
         lucide.createIcons();
+    },
+
+    openNewTercero() {
+        const form = document.getElementById('form-terceros');
+        if (form) form.reset();
+        this.currentTerceroId = null;
+        this.toggleModal('modal-tercero', true);
+    },
+
+    validateTerceroForm(data) {
+        const requiredFields = {
+            tipo_doc: 'Tipo de documento',
+            nro_doc: 'Numero de documento',
+            genero: 'Genero',
+            nombres: 'Nombres',
+            apellidos: 'Apellidos',
+            direc: 'Direccion',
+            correo: 'Correo',
+            movil: 'Movil',
+            tipo: 'Tipo'
+        };
+
+        const missing = Object.entries(requiredFields)
+            .filter(([field]) => !String(data[field] || '').trim())
+            .map(([, label]) => label);
+
+        if (missing.length) {
+            alert('Faltan campos obligatorios: ' + missing.join(', '));
+            return false;
+        }
+
+        return true;
     },
 
     async handleSubmitTercero(e) {
         e.preventDefault();
+        if (!e.target.checkValidity()) {
+            e.target.reportValidity();
+            return;
+        }
+
         const formData = new FormData(e.target);
         const data = Object.fromEntries(formData.entries());
+        data.id = data.nro_doc;
+
+        if (!this.validateTerceroForm(data)) return;
         
         try {
             if (this.currentTerceroId) {
@@ -116,10 +381,14 @@ const ui = {
             
             if (t) {
                 const form = document.getElementById('form-terceros');
-                form.id.value = t.ID;
+                if (form.tipo_doc) form.tipo_doc.value = t.TIPO_DOC || '';
+                form.nro_doc.value = t.NRO_DOC || t.ID;
+                if (form.genero) form.genero.value = t.GENERO || '';
                 form.nombres.value = t.NOMBRES;
                 form.apellidos.value = t.APELLIDOS;
+                if (form.direc) form.direc.value = t.DIREC || '';
                 form.correo.value = t.CORREO;
+                if (form.movil) form.movil.value = t.MOVIL || '';
                 form.tipo.value = t.TIPO;
                 
                 this.toggleModal('modal-tercero', true);
@@ -219,8 +488,28 @@ const ui = {
     toggleModal(id, show) {
         const modal = document.getElementById(id);
         if (modal) {
-            show ? modal.classList.remove('hidden') : modal.classList.add('hidden');
-            if (!show) this.currentTerceroId = null;
+            if (show) {
+                modal.classList.remove('hidden');
+                setTimeout(() => modal.classList.add('active'), 10);
+            } else {
+                modal.classList.remove('active');
+                setTimeout(() => modal.classList.add('hidden'), 300); // Espera que termine la animación
+                this.currentTerceroId = null;
+            }
+        }
+    },
+
+    toggleDrawer(show) {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('drawer-overlay');
+        if (sidebar && overlay) {
+            if (show) {
+                sidebar.classList.add('active');
+                overlay.classList.add('active');
+            } else {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            }
         }
     },
 

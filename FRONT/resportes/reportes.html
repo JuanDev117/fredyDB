@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AcademicOS | Reportes</title>
+    <title>AcademicOS | Reportes y Análisis</title>
     <link rel="stylesheet" href="../../styles.css">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -14,13 +14,35 @@
     <div class="bg-mesh"></div>
     <div class="bg-grid"></div>
 
+    <!-- Mobile Header -->
+    <div class="mobile-header">
+        <div class="flex items-center gap-3 text-primary">
+            <div class="w-9 h-9 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-center">
+                <i data-lucide="graduation-cap" class="w-5 h-5"></i>
+            </div>
+            <span class="text-xl font-bold tracking-tight font-heading text-gradient-primary">AcademicOS</span>
+        </div>
+        <button onclick="ui.toggleDrawer(true)" class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-zinc-400 hover:bg-white/10 hover:text-white transition-all">
+            <i data-lucide="menu" class="w-5 h-5"></i>
+        </button>
+    </div>
+
+    <!-- Drawer Overlay -->
+    <div id="drawer-overlay" class="drawer-overlay" onclick="ui.toggleDrawer(false)"></div>
+
     <div class="page-shell">
-        <aside>
-            <div class="flex items-center gap-3 px-2 mb-10 text-primary">
-                <div class="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center">
-                    <i data-lucide="graduation-cap"></i>
+        <!-- Sidebar -->
+        <aside id="sidebar">
+            <div class="flex items-center justify-between mb-10">
+                <div class="flex items-center gap-3 px-2 text-primary">
+                    <div class="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center border border-primary/10">
+                        <i data-lucide="graduation-cap"></i>
+                    </div>
+                    <span class="text-2xl font-bold tracking-tight font-heading">AcademicOS</span>
                 </div>
-                <span class="text-2xl font-bold tracking-tight font-heading">AcademicOS</span>
+                <button onclick="ui.toggleDrawer(false)" class="lg:hidden w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-zinc-400 hover:bg-white/10 hover:text-white transition-all">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
             </div>
 
             <nav class="flex-1">
@@ -50,11 +72,15 @@
             </nav>
         </aside>
 
+        <!-- Main Content -->
         <main>
-            <header class="flex items-center justify-between mb-12">
+            <header class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
                 <div>
+                    <a href="../../index.html" class="text-primary hover:text-primary-light text-sm flex items-center gap-2 mb-4 font-semibold transition-all">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i> Volver al Dashboard
+                    </a>
                     <h1 class="text-4xl font-bold text-gradient mb-2">Centro de Reportes</h1>
-                    <p class="text-zinc-400">Generación de certificados académicos y analítica de datos.</p>
+                    <p class="text-zinc-400">Generación de certificados académicos oficiales y analítica de datos en tiempo real.</p>
                 </div>
             </header>
 
@@ -62,58 +88,69 @@
                 <!-- Filtros -->
                 <div class="lg:col-span-1 space-y-6">
                     <div class="glass-card p-6">
-                        <h3 class="text-lg font-bold mb-4">Generar Certificado</h3>
+                        <h3 class="text-lg font-bold mb-4 font-heading flex items-center gap-2">
+                            <i data-lucide="search" class="text-primary w-5 h-5"></i>
+                            Generar Certificado
+                        </h3>
                         <div class="space-y-4">
-                            <div>
-                                <label class="text-xs font-bold text-zinc-500 uppercase">ID del Estudiante</label>
-                                <input type="text" id="student-id" placeholder="Ej: 12234234" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 mt-2 outline-none focus:border-primary/50 transition-all">
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">ID del Estudiante</label>
+                                <input type="text" id="student-id" placeholder="Ej: 12234234" class="w-full">
                             </div>
-                            <button onclick="ui.generateReport()" class="btn-primary w-full py-3">
+                            <button onclick="ui.generateReport()" class="btn-primary w-full py-3.5 text-dark shadow-lg shadow-primary/20 mt-2">
                                 <span>Consultar Datos</span>
                                 <i data-lucide="search" class="w-4 h-4"></i>
                             </button>
                         </div>
                     </div>
 
-                    <div class="glass-card p-6 border-l-4 border-accent">
-                        <h4 class="text-sm font-bold text-accent uppercase mb-2">Estado del Sistema</h4>
-                        <p class="text-xs text-zinc-400">Base de datos Oracle conectada. Tablas sincronizadas con el modelo de Historias Académicas.</p>
+                    <div class="glass-card p-6 border-l-4 border-accent bg-zinc-950/20">
+                        <h4 class="text-sm font-bold text-accent uppercase tracking-wide mb-2 flex items-center gap-2">
+                            <i data-lucide="shield-check" class="w-4 h-4"></i>
+                            Estado del Sistema
+                        </h4>
+                        <p class="text-xs text-zinc-400 leading-relaxed">Conexión activa con el clúster de Oracle DB. Tablas sincronizadas. Procedimiento SP y consultas de promedio optimizadas.</p>
                     </div>
                 </div>
 
                 <!-- Visualización -->
                 <div class="lg:col-span-2">
                     <div id="cert-display" class="hidden">
-                        <div class="glass-card p-10 relative overflow-hidden" id="certificate-preview">
-                            <!-- Decoración del certificado -->
-                            <div class="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-bl-full"></div>
-                            <div class="absolute bottom-0 left-0 w-32 h-32 bg-accent/10 rounded-tr-full"></div>
+                        <div class="glass-card p-10 relative overflow-hidden border border-amber-500/20 shadow-2xl bg-zinc-950/50" id="certificate-preview">
+                            <!-- Golden / Emerald decorative border -->
+                            <div class="absolute inset-2 border-2 border-dashed border-amber-500/10 rounded-2xl pointer-events-none"></div>
+                            
+                            <!-- Orbes decorativos traseros -->
+                            <div class="absolute top-0 right-0 w-48 h-48 bg-primary/10 rounded-bl-full filter blur-xl"></div>
+                            <div class="absolute bottom-0 left-0 w-48 h-48 bg-amber-500/5 rounded-tr-full filter blur-xl"></div>
 
-                            <div class="text-center space-y-6 relative z-10">
-                                <div class="w-20 h-20 bg-white/5 rounded-full mx-auto flex items-center justify-center border border-white/10">
-                                    <i data-lucide="award" class="w-10 h-10 text-primary"></i>
+                            <div class="text-center space-y-6 relative z-10 p-4">
+                                <div class="w-20 h-20 bg-amber-500/10 rounded-full mx-auto flex items-center justify-center border border-amber-500/30 shadow-[0_0_20px_rgba(245,158,11,0.1)]">
+                                    <i data-lucide="award" class="w-10 h-10 text-amber-400 animate-pulse" style="animation-duration: 3s;"></i>
                                 </div>
                                 
                                 <div class="space-y-2">
-                                    <h2 class="text-3xl font-bold font-heading">CERTIFICADO ACADÉMICO</h2>
-                                    <p class="text-primary font-semibold tracking-widest uppercase text-sm">Institución Educativa AcademicOS</p>
+                                    <h2 class="text-3xl font-bold font-heading tracking-wide text-gradient-primary">CERTIFICADO ACADÉMICO</h2>
+                                    <p class="text-amber-500 font-semibold tracking-[0.2em] uppercase text-xs">Institución Educativa AcademicOS</p>
                                 </div>
 
-                                <div class="py-8 border-y border-white/10">
-                                    <p class="text-zinc-400 italic">Se hace constar que el estudiante con identificación</p>
-                                    <p id="res-id" class="text-2xl font-bold my-2 text-white">---</p>
-                                    <p class="text-zinc-400 italic">Ha obtenido un promedio acumulado de:</p>
-                                    <p id="res-promedio" class="text-5xl font-black text-gradient my-4">0.0</p>
-                                </div>
-
-                                <div class="flex justify-between items-end pt-6">
-                                    <div class="text-left">
-                                        <p class="text-[10px] text-zinc-500 uppercase">Fecha de Expedición</p>
-                                        <p id="res-fecha" class="text-sm font-semibold">--/--/----</p>
+                                <div class="py-8 border-y border-white/5 space-y-4">
+                                    <p class="text-zinc-400 italic text-sm">Por medio de la presente se hace constar oficialmente que el estudiante con documento de identidad:</p>
+                                    <p id="res-id" class="text-3xl font-black font-mono tracking-wider text-white">---</p>
+                                    <p class="text-zinc-400 italic text-sm">Ha completado satisfactoriamente sus asignaturas obteniendo un promedio acumulado de:</p>
+                                    <div class="inline-flex bg-primary/10 border border-primary/20 px-8 py-3 rounded-2xl shadow-[0_0_20px_rgba(16,185,129,0.1)]">
+                                        <p id="res-promedio" class="text-5xl font-black text-gradient-primary">0.0</p>
                                     </div>
-                                    <button onclick="ui.downloadPDF()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20">
-                                        <i data-lucide="download"></i>
-                                        Descargar PDF Oficial
+                                </div>
+
+                                <div class="flex flex-col sm:flex-row justify-between items-center pt-6 gap-6">
+                                    <div class="text-center sm:text-left">
+                                        <p class="text-[9px] text-zinc-500 font-bold uppercase tracking-widest">Fecha de Expedición</p>
+                                        <p id="res-fecha" class="text-sm font-semibold text-zinc-300 mt-1">--/--/----</p>
+                                    </div>
+                                    <button onclick="ui.downloadPDF()" class="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-dark px-8 py-4 rounded-xl font-bold flex items-center gap-3 transition-all shadow-lg shadow-emerald-500/20 active:scale-95">
+                                        <i data-lucide="download" class="w-5 h-5"></i>
+                                        <span>Descargar PDF Oficial</span>
                                     </button>
                                 </div>
                             </div>
@@ -121,11 +158,14 @@
                     </div>
 
                     <!-- Empty State -->
-                    <div id="cert-empty" class="glass-card p-20 text-center space-y-4">
-                        <div class="w-16 h-16 bg-white/5 rounded-full mx-auto flex items-center justify-center text-zinc-600">
+                    <div id="cert-empty" class="glass-card p-20 text-center space-y-6">
+                        <div class="w-16 h-16 bg-white/5 rounded-2xl mx-auto flex items-center justify-center text-zinc-500 border border-white/5 shadow-inner">
                             <i data-lucide="file-search" class="w-8 h-8"></i>
                         </div>
-                        <p class="text-zinc-500">Ingresa un ID de estudiante para generar el certificado.</p>
+                        <div class="max-w-sm mx-auto">
+                            <p class="text-zinc-300 font-medium">Visualizador de Documentos</p>
+                            <p class="text-zinc-500 text-sm mt-1">Ingresa el documento de identidad de un estudiante a la izquierda para generar y firmar digitalmente su certificado.</p>
+                        </div>
                     </div>
                 </div>
             </div>

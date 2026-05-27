@@ -41,6 +41,22 @@ const dbConfig = {
     connectString: process.env.DB_CONNECTION_STRING
 };
 
+const requiredTerceroFields = [
+    'tipo_doc',
+    'nro_doc',
+    'genero',
+    'nombres',
+    'apellidos',
+    'direc',
+    'correo',
+    'movil',
+    'tipo'
+];
+
+function getMissingTerceroFields(body) {
+    return requiredTerceroFields.filter((field) => !String(body[field] || '').trim());
+}
+
 /**
  * Inicializa el Pool de conexiones de Oracle.
  * Es más eficiente que abrir/cerrar conexiones individuales en cada petición.
@@ -78,11 +94,41 @@ app.get('/api/terceros', async (req, res) => {
 app.post('/api/terceros', async (req, res) => {
     let connection;
     try {
+        const missingFields = getMissingTerceroFields(req.body);
+        if (missingFields.length) {
+            return res.status(400).json({
+                error: 'Faltan campos obligatorios',
+                fields: missingFields
+            });
+        }
+
         connection = await oracledb.getConnection();
-        const { id, nombres, apellidos, correo, tipo } = req.body;
+        const { tipo_doc, nro_doc, genero, nombres, apellidos, direc, correo, movil, tipo } = req.body;
         await connection.execute(
-            `INSERT INTO TERCEROS (TERC_ID, TERC_NOMBRES, TERC_APELLIDOS, TERC_CORREO, TERC_TIPO) VALUES (:id, :nombres, :apellidos, :correo, :tipo)`,
-            [id, nombres, apellidos, correo, tipo]
+            `BEGIN 
+                SP_ING_TERCEROS(
+                    :tipo_doc,
+                    :nro_doc,
+                    :genero,
+                    :nombres,
+                    :apellidos,
+                    :direc,
+                    :correo,
+                    :movil,
+                    :tipo
+                ); 
+             END;`,
+            {
+                tipo_doc,
+                nro_doc,
+                genero,
+                nombres,
+                apellidos,
+                direc,
+                correo,
+                movil,
+                tipo
+            }
         );
         res.status(201).json({ message: 'Tercero creado' });
     } catch (err) {
@@ -100,7 +146,7 @@ app.put('/api/terceros/:id', async (req, res) => {
         connection = await oracledb.getConnection();
         const { id } = req.params;
         const { nombres, apellidos, correo, tipo } = req.body;
-        await connection.execute(
+        await connection.execute(//se debe llamar la instruccion y enviar los parametros 
             `UPDATE TERCEROS SET TERC_NOMBRES = :nombres, TERC_APELLIDOS = :apellidos, TERC_CORREO = :correo, TERC_TIPO = :tipo WHERE TERC_ID = :id`,
             [nombres, apellidos, correo, tipo, id]
         );
@@ -164,9 +210,111 @@ app.get('/api/programas', async (req, res) => {
     let connection;
     try {
         connection = await oracledb.getConnection();
-        const result = await connection.execute('SELECT PROG_ID as ID, PROG_PROGRAMA as NOMBRE FROM PROGRAMAS');
+        const result = await connection.execute('SELECT PROG_ID, PROG_PROGRAMA FROM PROGRAMAS ORDER BY PROG_PROGRAMA');
         res.json(result.rows);
     } catch (err) {
+        console.error('Error en GET /api/programas:', err);
+        res.status(500).json({ error: err.message });
+    } finally {
+        if (connection) await connection.close();
+    }
+});
+
+// ==========================================
+// MODULO PROCESOS: ASIGNAR PENSUM A ESTUDIANTE
+// ==========================================
+
+// Obtener estudiantes registrados en TERCEROS
+app.get('/api/estudiantes', async (req, res) => {
+    let connection;
+    try {
+        connection = await oracledb.getConnection();
+        const result = await connection.execute(`
+            SELECT TERC_ID, TERC_NOMBRES, TERC_APELLIDOS
+            FROM TERCEROS
+            WHERE TERC_TIPO = 0
+            ORDER BY TERC_APELLIDOS, TERC_NOMBRES
+        `);
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Error en GET /api/estudiantes:', err);
+        res.status(500).json({ error: err.message });
+    } finally {
+        if (connection) await connection.close();
+    }
+});
+
+// Obtener pensums asociados a un programa
+app.get('/api/pensums/:prog_id', async (req, res) => {
+    let connection;
+    try {
+        connection = await oracledb.getConnection();
+        const { prog_id } = req.params;
+        const result = await connection.execute(
+            `SELECT *
+             FROM PENSUMS
+             WHERE PROG_ID = :prog_id
+             ORDER BY PENS_ID`,
+            { prog_id: Number(prog_id) }
+        );
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Error en GET /api/pensums/:prog_id:', err);
+        res.status(500).json({ error: err.message });
+    } finally {
+        if (connection) await connection.close();
+    }
+});
+
+// Ejecutar SP que asigna el pensum y dispara la matricula en cascada
+app.post('/api/asignar-pensum', async (req, res) => {
+    let connection;
+    try {
+        const terc_id = Number(req.body.terc_id);
+        const pens_id = Number(req.body.pens_id);
+
+        if (!Number.isInteger(terc_id) || !Number.isInteger(pens_id)) {
+            return res.status(400).json({ error: 'terc_id y pens_id son obligatorios y deben ser numericos' });
+        }
+
+        connection = await oracledb.getConnection();
+        await connection.execute(
+            `BEGIN
+                SP_ING_TERC_PENSUMS(:T_ID, :P_ID);
+             END;`,
+            {
+                T_ID: terc_id,
+                P_ID: pens_id
+            }
+        );
+
+        res.status(201).json({ message: 'Pensum asignado correctamente' });
+    } catch (err) {
+        console.error('Error en POST /api/asignar-pensum:', err);
+        res.status(500).json({ error: err.message });
+    } finally {
+        if (connection) await connection.close();
+    }
+});
+
+// Consultar historial de materias matriculadas de un estudiante
+app.get('/api/historial/:terc_id', async (req, res) => {
+    let connection;
+    try {
+        connection = await oracledb.getConnection();
+        const { terc_id } = req.params;
+        const result = await connection.execute(
+            `SELECT H.CURS_ID, A.ASIG_ASIGNATURA, H.HIST_NOTA
+             FROM HISTORIAS H, CURSOS C, ASIGNATURAS A
+             WHERE H.CURS_ID = C.CURS_ID
+               AND C.ASIG_ID = A.ASIG_ID
+               AND H.TERC_ID = :terc_id
+             ORDER BY H.CURS_ID`,
+            { terc_id: Number(terc_id) }
+        );
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Error en GET /api/historial/:terc_id:', err);
         res.status(500).json({ error: err.message });
     } finally {
         if (connection) await connection.close();
@@ -182,9 +330,8 @@ app.post('/api/herramientas/importar', upload.single('file'), (req, res) => {
     if (!req.file) return res.status(400).json({ message: 'No se subió ningún archivo' });
     
     const results = [];
-    // Usamos csv-parser con soporte para diferentes delimitadores
     fs.createReadStream(req.file.path)
-        .pipe(csv({ separator: ',' })) // Por defecto comas, pero puedes cambiarlo a ';' si es necesario
+        .pipe(csv({ separator: ',' })) // Cambia a ';' si tu CSV usa punto y coma
         .on('data', (data) => results.push(data))
         .on('end', async () => {
             let connection;
@@ -193,82 +340,51 @@ app.post('/api/herramientas/importar', upload.single('file'), (req, res) => {
                 let count = 0;
                 
                 for (const row of results) {
-                    // Validamos que los datos necesarios existan en el CSV
-                    if (!row.id || !row.nombre) continue;
+                    // Validación mínima: validamos que el número de documento no venga vacío
+                    if (!row.nro_doc) continue;
                     
-                    // Inserción fila por fila
+                    // Ejecución del Procedimiento Almacenado de Oracle
                     await connection.execute(
-                        `INSERT INTO ASIGNATURAS (ASIG_ID, ASIG_ASIGNATURA, ASIG_CREDITOS, ASIG_CODIGO) 
-                         VALUES (:id, :nomb, :cred, :cod)`,
+                        `BEGIN 
+                            SP_ING_TERCEROS(
+                                :tipo_doc, 
+                                :nro_doc, 
+                                :genero, 
+                                :nombres, 
+                                :apellidos, 
+                                :direc, 
+                                :correo, 
+                                :movil, 
+                                :tipo
+                            ); 
+                         END;`,
                         {
-                            id: parseInt(row.id),
-                            // Mapeo de campos del CSV a columnas de DB
-                            nomb: row.nombre,
-                            cred: parseInt(row.creditos || 0),
-                            cod: row.codigo || 'SIN-COD'
+                            // Mapea aquí las cabeceras exactas que vienen en tu archivo CSV
+                            tipo_doc:  row.tipo_doc || null,
+                            nro_doc:   row.nro_doc,
+                            genero:    row.genero || null,
+                            nombres:   row.nombres || null,
+                            apellidos: row.apellidos || null,
+                            direc:     row.direc || null,
+                            correo:    row.correo || null,
+                            movil:     row.movil || null,
+                            tipo:      row.tipo || null
                         }
                     );
                     count++;
                 }
-                await connection.commit(); // Confirmamos los cambios de forma masiva
-                res.json({ message: `✅ Importación exitosa: ${count} asignaturas añadidas.` });
+                
+                await connection.commit(); // Confirmamos los inserts del SP
+                res.json({ message: ` Importación exitosa: ${count} terceros procesados mediante SP.` });
             } catch (err) {
-                console.error(' Error en importación:', err);
+                console.error('Error en importación:', err);
                 res.status(500).json({ error: 'Error en la base de datos: ' + err.message });
             } finally {
                 if (connection) await connection.close();
-                if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path); // Limpiar archivo temporal
+                if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path); 
             }
         });
 });
-
-// Exportar el catálogo de asignaturas a un formato CSV descargable
-app.get('/api/herramientas/exportar', async (req, res) => {
-    let connection;
-    try {
-        connection = await oracledb.getConnection();
-        const result = await connection.execute('SELECT * FROM ASIGNATURAS');
-        const csvData = result.rows.map(row => Object.values(row).join(',')).join('\n');
-        res.header('Content-Type', 'text/csv');
-        res.attachment('asignaturas_export.csv');
-        res.send(csvData);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    } finally {
-        if (connection) await connection.close();
-    }
-});
-
-// ==========================================
-// MÓDULO REPORTES: PROMEDIOS (Tabla HISTORIAS)
-// ==========================================
-// Calcula el promedio de notas de un estudiante (Tercero)
-app.get('/api/reportes/promedio/:estudianteId', async (req, res) => {
-    let connection;
-    try {
-        connection = await oracledb.getConnection();
-        const { estudianteId } = req.params;
-        
-        // Consulta basada en el diagrama ERD
-        const result = await connection.execute(
-            `SELECT AVG(HIST_NOTA) as PROMEDIO FROM HISTORIAS WHERE TERC_ID = :id`,
-            [estudianteId]
-        );
-        
-        const promedio = result.rows[0].PROMEDIO || 0;
-        res.json({ 
-            id: estudianteId, 
-            promedio: parseFloat(promedio).toFixed(2),
-            fecha: new Date().toLocaleDateString()
-        });
-    } catch (err) {
-        console.error(' Error en Reportes:', err);
-        res.status(500).json({ error: err.message });
-    } finally {
-        if (connection) await connection.close();
-    }
-});
-
 // ==========================================
 // MÓDULO PROCESOS: AUDITORÍA Y PENSUM
 // ==========================================
